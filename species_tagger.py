@@ -4,7 +4,7 @@ import ConfigParser
 import re
 import codecs
 import os
-from subprocess import call, check_call,check_output,STDOUT, Popen
+from subprocess import call
 
 import logging
 
@@ -59,28 +59,37 @@ def tagging(input_file, output_file, index_id, index_text_to_tag):
             process(file, output_file_result, index_id, index_text_to_tag)
             list_files.write(os.path.basename(file)+"\n")
             list_files.flush()
-    
     list_files.close() 
 
 def process(input_file, output_file_result, index_id, index_text_to_tag):
     logging.info("Tagging  intup file  : " + input_file + ".  output file : "  + output_file_result)
     if not os.path.exists(output_file_result):
         os.makedirs(output_file_result)
+    total_articles_errors = 0
     with codecs.open(input_file,'r',encoding='utf8') as file:
         for line in file:
-            data = re.split(r'\t+', line) 
-            id = data[index_id]
-            text_to_tag = data[index_text_to_tag]
-            with codecs.open(output_file_result+"/"+ id + ".txt",'w',encoding='utf8') as f:
-                f.write(text_to_tag)
-                f.flush()
-                f.close()   
+            try:
+                data = re.split(r'\t+', line) 
+                if(len(data)==5):
+                    id = data[index_id]
+                    text_to_tag = data[index_text_to_tag]
+                    with codecs.open(output_file_result+"/"+ id + ".txt",'w',encoding='utf8') as f:
+                        f.write(text_to_tag)
+                        f.flush()
+                else:
+                    logging.error("The article with line:  " + line)
+                    logging.error("Belongs to : " + input_file + " and does not have four columns")
+                    total_articles_errors = total_articles_errors + 1
+            except Exception as inst:
+                logging.error("The article with id : " + id + " could not be processed. Cause:  " +  str(inst))
+                logging.error("Belongs to : " + input_file )
+                logging.debug( "Full Line :  " + line)
+                logging.error("The cause probably: contained an invalid character ")
+                total_articles_errors = total_articles_errors + 1
         file.close()           
-    
+                
     call_species_tagger(output_file_result, output_file_result+"_tagged.txt")
-    
-    
-    logging.info("Tagging  Finish For " + input_file + ".  output file : "  + output_file_result)    
+    logging.info("Tagging  Finish For " + input_file + ".  output file : "  + output_file_result + ", articles with error : " + str(total_articles_errors))    
         
 
 
