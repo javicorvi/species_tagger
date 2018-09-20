@@ -55,10 +55,11 @@ def tagging(input_file, output_file, index_id, index_text_to_tag):
     
     with open(output_file+"/list_files_processed.dat",'a') as list_files:    
         for file in onlyfiles_toprocess:    
-            output_file_result = output_file + os.path.basename(file)
-            process(file, output_file_result, index_id, index_text_to_tag)
-            list_files.write(os.path.basename(file)+"\n")
-            list_files.flush()
+            output_file_result = output_file + "/" + os.path.basename(file)
+            ret = process(file, output_file_result, index_id, index_text_to_tag)
+            if(ret==0):
+                list_files.write(os.path.basename(file)+"\n")
+                list_files.flush()
     list_files.close() 
 
 def process(input_file, output_file_result, index_id, index_text_to_tag):
@@ -88,9 +89,9 @@ def process(input_file, output_file_result, index_id, index_text_to_tag):
                 total_articles_errors = total_articles_errors + 1
         file.close()           
                 
-    call_species_tagger(output_file_result, output_file_result+"_tagged.txt")
+    ret = call_species_tagger(output_file_result, output_file_result+"_tagged.txt")
     logging.info("Tagging  Finish For " + input_file + ".  output file : "  + output_file_result + ", articles with error : " + str(total_articles_errors))    
-        
+    return ret    
 
 
 def call_species_tagger(input_folder, output_file):
@@ -99,4 +100,5 @@ def call_species_tagger(input_folder, output_file):
                "--out", output_file], stdout=result_file)
         if(resp==1):
             logging.error("Linnaeus error, Tagging input folder  : " + input_folder + ".  output file : "  + output_file)
-    
+            return 1
+        return 0    
