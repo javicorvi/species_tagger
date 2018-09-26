@@ -71,7 +71,7 @@ def process(input_file, output_file_result, index_id, index_text_to_tag):
         for line in file:
             try:
                 data = re.split(r'\t+', line) 
-                if(len(data)==5):
+                if(len(data)>=6):
                     id = data[index_id]
                     text_to_tag = data[index_text_to_tag]
                     with codecs.open(output_file_result+"/"+ id + ".txt",'w',encoding='utf8') as f:
